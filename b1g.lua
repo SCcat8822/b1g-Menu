@@ -1,4 +1,5 @@
 local AimbotPoints = {}
+
 AimbotPoints[1] = {bone = "ValveBiped.Bip01_Head1"}
 AimbotPoints[2] = {bone = "ValveBiped.Bip01_Neck1"}
 AimbotPoints[3] = {bone = "ValveBiped.Bip01_Spine4"}
