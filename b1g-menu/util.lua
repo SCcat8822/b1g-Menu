@@ -1,3 +1,10 @@
+function pMenu.IsNetString(netstring) // pmeme
+	local validate,_ = pcall( net.Start, netstring )
+	if validate then
+		return validate;
+	end
+	return false;
+end
 function pMenu.RandomString(len)
 	if len == nil then
 		len = math.random(20,100)
