@@ -112,7 +112,7 @@ function()
 	end
 end
 }
-
+	
 BigExploits["Logging thing Kick All players?"] = {func = 
 function()
 	if pMenu.IsNetString("DL_Answering") then
