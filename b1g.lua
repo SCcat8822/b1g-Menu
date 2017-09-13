@@ -1383,7 +1383,7 @@ function ChangeSkybox(skyboxname)
         SourceSkyMat[i]:SetTexture("$basetexture",D)
     end
 end
-hook.Add("RenderScene", "See through walls", function()
+hook.Add("RenderScene", "Get cancer and die", function()
 	if pMenuVars.CheckBoxes["MISC Night-mode"] != nil && pMenuVars.CheckBoxes["MISC Night-mode"].value then
 		ChangeSkybox("sky_borealis01")
 		for k,v in pairs(game.GetWorld():GetMaterials()) do
